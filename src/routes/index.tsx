@@ -7,10 +7,12 @@ import { PortalShell } from "@/components/PortalShell";
 import { featuredGame, games, tileStyle } from "@/lib/games";
 
 export const Route = createFileRoute("/")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    q: typeof search.q === "string" ? search.q : "",
-    sort: search.sort === "new" ? ("new" as const) : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): { q?: string; sort?: "new" } => {
+    const out: { q?: string; sort?: "new" } = {};
+    if (typeof search["q"] === "string" && search["q"]) out.q = search["q"];
+    if (search["sort"] === "new") out.sort = "new";
+    return out;
+  },
   head: () => ({
     meta: [
       { title: "PlayzoArena — Free Online HTML5 Games, No Download" },
@@ -31,7 +33,7 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   const { q, sort } = Route.useSearch();
-  const query = q.trim().toLowerCase();
+  const query = (q ?? "").trim().toLowerCase();
 
   const filtered = games.filter(
     (g) =>

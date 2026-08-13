@@ -82,7 +82,7 @@ function NavItem({
       to={to as any}
       params={params as never}
       search={search as never}
-      activeOptions={{ exact }}
+      activeOptions={{ exact: exact ?? false }}
       title={label}
       className="mx-2 flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold text-sidebar-foreground transition-colors hover:bg-sidebar-accent data-[status=active]:bg-sidebar-accent data-[status=active]:text-sidebar-primary"
     >
