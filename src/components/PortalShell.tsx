@@ -1,21 +1,44 @@
 import { useState, type ReactNode } from "react";
 
-import { SideNav } from "./SideNav";
-import { TopBar } from "./TopBar";
+import { Header } from "./Header";
+import { Sidebar } from "./Sidebar";
+import { useSession } from "@/hooks/useSession";
+import { useLang } from "@/lib/i18n";
+import type { Category } from "@/lib/types";
 
-export function PortalShell({ children }: { children: ReactNode }) {
-  const [collapsed, setCollapsed] = useState(false);
+export function PortalShell({
+  categories,
+  children,
+  query = "",
+}: {
+  categories: Category[];
+  children: ReactNode;
+  query?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const { isAdmin, signedIn } = useSession();
+  const { t } = useLang();
 
   return (
-    <div className="min-h-screen bg-background">
-      <TopBar onToggleSidebar={() => setCollapsed((c) => !c)} />
-      <div className="flex">
-        <SideNav collapsed={collapsed} />
-        <main className="min-w-0 flex-1 px-3 py-4 md:px-6">{children}</main>
+    <div className="flex min-h-screen bg-background">
+      <Sidebar
+        categories={categories}
+        open={open}
+        onClose={() => setOpen(false)}
+        isAdmin={isAdmin}
+      />
+      <div className="mx-auto flex min-w-0 w-full max-w-[1400px] flex-1 flex-col px-4 py-2 lg:px-8">
+        <Header
+          onToggleSidebar={() => setOpen((v) => !v)}
+          isAdmin={isAdmin}
+          signedIn={signedIn}
+          initialQuery={query}
+        />
+        <main className="min-w-0 flex-1">{children}</main>
+        <footer className="mt-12 border-t border-border py-6 text-center text-xs text-muted-foreground">
+          {t("brand")} — HTML5 games. Powered by GameDistribution.
+        </footer>
       </div>
-      <footer className="border-t border-border px-4 py-6 text-center text-xs text-muted-foreground">
-        PlayzoArena — free HTML5 games in your browser. Games distributed via GameDistribution.
-      </footer>
     </div>
   );
 }
