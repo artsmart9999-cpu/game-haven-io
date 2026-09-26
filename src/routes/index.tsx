@@ -12,10 +12,10 @@ import { useLang } from "@/lib/i18n";
 import { formatPlays, tileStyle, type Game } from "@/lib/types";
 
 export const Route = createFileRoute("/")({
-  validateSearch: (search: Record<string, unknown>): { q?: string; sort?: "new" } => {
-    const out: { q?: string; sort?: "new" } = {};
+  validateSearch: (search: Record<string, unknown>): { q?: string; sort?: "new" | "top" } => {
+    const out: { q?: string; sort?: "new" | "top" } = {};
     if (typeof search["q"] === "string" && search["q"]) out.q = search["q"].slice(0, 80);
-    if (search["sort"] === "new") out.sort = "new";
+    if (search["sort"] === "new" || search["sort"] === "top") out.sort = search["sort"];
     return out;
   },
   loader: () => getPortal(),
@@ -50,7 +50,13 @@ function Home() {
       g.title.toLowerCase().includes(query) ||
       g.tags.some((tag) => tag.toLowerCase().includes(query)),
   );
-  const grid = sort === "new" ? filtered : filtered;
+  const rating = (g: Game) => (g.likes + 1) / (g.likes + g.dislikes + 2);
+  const grid =
+    sort === "top"
+      ? [...filtered].sort((a, b) => rating(b) - rating(a))
+      : sort === "new"
+        ? filtered
+        : [...filtered].sort((a, b) => b.plays - a.plays);
   const popular = [...games].sort((a, b) => b.plays - a.plays).slice(0, 12);
   const newest = games.slice(0, 12);
   const featured = games.find((g) => g.is_featured) ?? popular[0];
@@ -59,7 +65,7 @@ function Home() {
     <PortalShell categories={categories} query={q ?? ""}>
       <AdSlot width={728} height={90} label="AdSense 728×90" className="mb-6" />
 
-      {!query && featured && (
+      {!query && !sort && featured && (
         <section className="relative mb-8 overflow-hidden rounded-2xl bg-gradient-hero p-6 md:p-10">
           <div className="relative z-10 max-w-xl">
             <span className="inline-block rounded-full bg-black/25 px-3 py-1 text-xs font-bold uppercase tracking-widest text-foreground">
@@ -95,7 +101,7 @@ function Home() {
         </section>
       )}
 
-      {!query && (
+      {!query && !sort && (
         <>
           <GameCarousel
             title={t("popularGames")}
@@ -118,7 +124,7 @@ function Home() {
         <section className="min-w-0 flex-1">
           <h2 className="mb-4 flex items-center gap-2.5 text-[22px] font-bold text-foreground">
             <LayoutGrid className="size-5 text-primary" />
-            {query ? `${t("resultsFor")} “${q}”` : sort === "new" ? t("newGames") : t("allGames")}
+            {query ? `${t("resultsFor")} “${q}”` : sort === "new" ? t("newGames") : sort === "top" ? t("ratings") : t("allGames")}
           </h2>
 
           {grid.length === 0 ? (

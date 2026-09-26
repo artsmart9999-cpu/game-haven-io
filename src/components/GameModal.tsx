@@ -1,18 +1,21 @@
 import { Link } from "@tanstack/react-router";
-import { ExternalLink, Gamepad2, Maximize2, ThumbsDown, ThumbsUp, X } from "lucide-react";
+import { ExternalLink, Gamepad2, Maximize2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
+import { FavoriteButton, ShareButtons, VoteButtons } from "@/components/GameActions";
+import { registerPlay } from "@/lib/local";
 import { useLang } from "@/lib/i18n";
 import type { Game } from "@/lib/types";
 
 export function GameModal({ game, onClose }: { game: Game | null; onClose: () => void }) {
   const { t } = useLang();
   const boxRef = useRef<HTMLDivElement>(null);
-  const [vote, setVote] = useState<"up" | "down" | null>(null);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    setVote(null);
-  }, [game?.id]);
+    setLoaded(false);
+    if (game) registerPlay(game.id);
+  }, [game?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!game) return;
@@ -29,10 +32,8 @@ export function GameModal({ game, onClose }: { game: Game | null; onClose: () =>
 
   if (!game) return null;
 
-  const likes = game.likes + (vote === "up" ? 1 : 0);
-  const dislikes = game.dislikes + (vote === "down" ? 1 : 0);
-  const total = likes + dislikes;
-  const percent = total > 0 ? Math.round((likes / total) * 100) : 0;
+  const iconBtn =
+    "rounded-lg px-2.5 py-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground";
 
   return (
     <div
@@ -51,42 +52,13 @@ export function GameModal({ game, onClose }: { game: Game | null; onClose: () =>
         <div className="flex items-center justify-between gap-3 border-b border-border bg-surface-2 px-5 py-3.5">
           <h2 className="truncate text-lg font-semibold text-foreground">{game.title}</h2>
           <div className="flex items-center gap-1">
-            <button
-              onClick={() => setVote((v) => (v === "up" ? null : "up"))}
-              title={t("like")}
-              className={`flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-sm transition-colors ${
-                vote === "up"
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-              }`}
-            >
-              <ThumbsUp className="size-4" />
-              {percent}%
-            </button>
-            <button
-              onClick={() => setVote((v) => (v === "down" ? null : "down"))}
-              title={t("dislike")}
-              className={`rounded-lg px-2.5 py-2 transition-colors ${
-                vote === "down"
-                  ? "bg-destructive text-destructive-foreground"
-                  : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-              }`}
-            >
-              <ThumbsDown className="size-4" />
-            </button>
-            <button
-              onClick={() => boxRef.current?.requestFullscreen?.()}
-              title={t("fullscreen")}
-              className="rounded-lg px-2.5 py-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-            >
+            <VoteButtons game={game} />
+            <FavoriteButton game={game} />
+            <ShareButtons game={game} />
+            <button onClick={() => boxRef.current?.requestFullscreen?.()} title={t("fullscreen")} className={iconBtn}>
               <Maximize2 className="size-4" />
             </button>
-            <Link
-              to="/game/$slug"
-              params={{ slug: game.slug }}
-              title={game.title}
-              className="rounded-lg px-2.5 py-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-            >
+            <Link to="/game/$slug" params={{ slug: game.slug }} title={game.title} className={iconBtn}>
               <ExternalLink className="size-4" />
             </Link>
             <button
@@ -99,21 +71,22 @@ export function GameModal({ game, onClose }: { game: Game | null; onClose: () =>
           </div>
         </div>
 
-        <div className="relative flex-1 bg-[#0b0e14]">
-          {game.embed_url ? (
-            <iframe
-              src={game.embed_url}
-              title={game.title}
-              allowFullScreen
-              className="size-full border-0"
-            />
-          ) : (
-            <div className="flex h-full flex-col items-center justify-center gap-2 p-6 text-center text-muted-foreground">
-              <Gamepad2 className="size-12" />
+        <div className="relative flex-1 bg-background">
+          {!loaded && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-muted-foreground">
+              <Gamepad2 className="size-12 animate-pulse text-primary" />
               {t("loadingGame")}
-              <span className="text-sm text-muted-foreground/60">{t("checkIframe")}</span>
+              <span className="text-xs">{t("checkIframe")}</span>
             </div>
           )}
+          <iframe
+            src={game.embed_url}
+            title={game.title}
+            allowFullScreen
+            allow="autoplay; fullscreen; gamepad"
+            onLoad={() => setLoaded(true)}
+            className="relative size-full border-0"
+          />
         </div>
       </div>
     </div>

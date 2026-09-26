@@ -3,6 +3,9 @@ import {
   Car,
   Crosshair,
   Flame,
+  Heart,
+  History,
+  TrendingUp,
   Gamepad2,
   Globe,
   Map,
@@ -78,6 +81,9 @@ export function Sidebar({
             icon={Sparkles}
             onClick={onClose}
           />
+          <Item to="/" search={{ sort: "top" }} label={t("ratings")} icon={TrendingUp} onClick={onClose} />
+          <Item to="/my" search={{ tab: "favorites" }} label={lang === "ru" ? "Избранное" : "Favorites"} icon={Heart} onClick={onClose} />
+          <Item to="/my" search={{ tab: "recent" }} label={lang === "ru" ? "Недавние" : "Recent"} icon={History} onClick={onClose} />
 
           <div className="my-3 h-px bg-sidebar-border mx-6" />
           <p className="px-6 pb-2 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">

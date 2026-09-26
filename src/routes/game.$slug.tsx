@@ -1,13 +1,7 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
-import {
-  Gamepad2,
-  Keyboard,
-  Maximize2,
-  Play,
-  Star,
-  ThumbsDown,
-  ThumbsUp,
-} from "lucide-react";
+import { Gamepad2, Keyboard, Maximize2, Play, Star } from "lucide-react";
+import { FavoriteButton, ShareButtons, VoteButtons } from "@/components/GameActions";
+import { registerPlay } from "@/lib/local";
 import { useRef, useState } from "react";
 
 import { AdSlot } from "@/components/AdSlot";
@@ -51,8 +45,40 @@ export const Route = createFileRoute("/game/$slug")({
         { name: "twitter:image", content: game.thumbnail_url },
       );
     }
-    return { meta };
+    const ld = {
+      "@context": "https://schema.org",
+      "@type": "VideoGame",
+      name: game.title,
+      description,
+      genre: game.tags,
+      playMode: "SinglePlayer",
+      applicationCategory: "Game",
+      operatingSystem: "Web browser",
+      ...(game.thumbnail_url ? { image: game.thumbnail_url } : {}),
+      interactionStatistic: {
+        "@type": "InteractionCounter",
+        interactionType: "https://schema.org/PlayAction",
+        userInteractionCount: game.plays,
+      },
+      ...(game.likes + game.dislikes > 0
+        ? {
+            aggregateRating: {
+              "@type": "AggregateRating",
+              ratingValue: Math.round((game.likes / (game.likes + game.dislikes)) * 50) / 10,
+              bestRating: 5,
+              ratingCount: game.likes + game.dislikes,
+            },
+          }
+        : {}),
+    };
+    return {
+      meta: [...meta, { name: "twitter:card", content: "summary_large_image" }],
+      scripts: [{ type: "application/ld+json", children: JSON.stringify(ld) }],
+    };
   },
+  notFoundComponent: () => (
+    <div className="grid min-h-screen place-items-center text-muted-foreground">404</div>
+  ),
   component: GamePage,
 });
 
@@ -60,13 +86,12 @@ function GamePage() {
   const { game, categories, related } = Route.useLoaderData();
   const { lang, t } = useLang();
   const [started, setStarted] = useState(false);
-  const [vote, setVote] = useState<"up" | "down" | null>(null);
   const [active, setActive] = useState<Game | null>(null);
   const frameRef = useRef<HTMLDivElement>(null);
 
   const category = categories.find((c) => c.id === game.category_id);
-  const likes = game.likes + (vote === "up" ? 1 : 0);
-  const dislikes = game.dislikes + (vote === "down" ? 1 : 0);
+  const likes = game.likes;
+  const dislikes = game.dislikes;
   const percent = likes + dislikes > 0 ? Math.round((likes / (likes + dislikes)) * 100) : 0;
 
   return (
@@ -84,11 +109,15 @@ function GamePage() {
                 src={game.embed_url}
                 title={game.title}
                 allowFullScreen
+                allow="autoplay; fullscreen; gamepad"
                 className="size-full border-0"
               />
             ) : (
               <button
-                onClick={() => setStarted(true)}
+                onClick={() => {
+                  setStarted(true);
+                  registerPlay(game.id);
+                }}
                 className="group relative size-full"
                 aria-label={t("play")}
               >
@@ -112,26 +141,11 @@ function GamePage() {
 
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <h1 className="mr-auto text-2xl font-extrabold text-foreground">{game.title}</h1>
-            <button
-              onClick={() => setVote((v) => (v === "up" ? null : "up"))}
-              className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
-                vote === "up"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-surface-2 text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <ThumbsUp className="size-4" /> {percent}%
-            </button>
-            <button
-              onClick={() => setVote((v) => (v === "down" ? null : "down"))}
-              className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
-                vote === "down"
-                  ? "bg-destructive text-destructive-foreground"
-                  : "bg-surface-2 text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <ThumbsDown className="size-4" />
-            </button>
+            <div className="flex items-center gap-1 rounded-full bg-surface-2 px-1">
+              <VoteButtons game={game} />
+              <FavoriteButton game={game} />
+              <ShareButtons game={game} />
+            </div>
             <button
               onClick={() => frameRef.current?.requestFullscreen?.()}
               className="flex items-center gap-2 rounded-full bg-surface-2 px-4 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
