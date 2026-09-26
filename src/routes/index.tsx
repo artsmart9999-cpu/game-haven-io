@@ -9,7 +9,7 @@ import { GameModal } from "@/components/GameModal";
 import { PortalShell } from "@/components/PortalShell";
 import { getPortal } from "@/lib/games.functions";
 import { useLang } from "@/lib/i18n";
-import { formatPlays, tileStyle, type Game } from "@/lib/types";
+import { formatPlays, type Game } from "@/lib/types";
 
 export const Route = createFileRoute("/")({
   validateSearch: (search: Record<string, unknown>): { q?: string; sort?: "new" | "top" } => {
@@ -66,16 +66,26 @@ function Home() {
       <AdSlot width={728} height={90} label="AdSense 728×90" className="mb-6" />
 
       {!query && !sort && featured && (
-        <section className="relative mb-8 overflow-hidden rounded-2xl bg-gradient-hero p-6 md:p-10">
+        <section className="hero-panel relative mb-10 min-h-[390px] overflow-hidden rounded-[30px] border border-white/10 p-7 md:p-11">
+          {featured.thumbnail_url && (
+            <img
+              src={featured.thumbnail_url}
+              alt=""
+              className="absolute inset-0 size-full object-cover"
+            />
+          )}
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(13,16,18,.96)_0%,rgba(13,16,18,.78)_42%,rgba(13,16,18,.08)_100%)]" />
           <div className="relative z-10 max-w-xl">
-            <span className="inline-block rounded-full bg-black/25 px-3 py-1 text-xs font-bold uppercase tracking-widest text-foreground">
-              {t("featured")}
+            <span className="inline-flex items-center gap-2 rounded-full bg-primary px-3 py-1.5 text-[10px] font-black uppercase tracking-[.18em] text-primary-foreground">
+              <span className="size-1.5 animate-pulse rounded-full bg-current" /> Игра недели
             </span>
-            <h1 className="mt-3 text-3xl font-extrabold text-foreground md:text-5xl">
+            <h1 className="mt-6 text-4xl font-extrabold leading-[.92] text-foreground md:text-7xl">
               {featured.title}
             </h1>
-            <p className="mt-3 text-sm text-foreground/85 md:text-base">{featured.description}</p>
-            <div className="mt-4 flex items-center gap-5 text-sm text-foreground/85">
+            <p className="mt-5 max-w-lg text-sm leading-relaxed text-foreground/70 md:text-base">
+              {featured.description}
+            </p>
+            <div className="mt-5 flex items-center gap-5 text-sm font-bold text-foreground/85">
               <span className="flex items-center gap-1.5">
                 <Star className="size-4 fill-current text-chart-3" />
                 {featured.likes + featured.dislikes > 0
@@ -89,15 +99,11 @@ function Home() {
             </div>
             <button
               onClick={() => setActive(featured)}
-              className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-glow transition-transform hover:scale-105"
+              className="mt-7 inline-flex items-center gap-2 rounded-xl bg-primary px-7 py-3.5 text-sm font-black text-primary-foreground transition-transform hover:-translate-y-1"
             >
               <Play className="size-4 fill-current" /> {t("playNow")}
             </button>
           </div>
-          <div
-            className="absolute -right-10 top-0 hidden h-full w-1/2 rotate-3 rounded-2xl opacity-60 md:block"
-            style={tileStyle(featured.hue)}
-          />
         </section>
       )}
 
@@ -124,7 +130,13 @@ function Home() {
         <section className="min-w-0 flex-1">
           <h2 className="mb-4 flex items-center gap-2.5 text-[22px] font-bold text-foreground">
             <LayoutGrid className="size-5 text-primary" />
-            {query ? `${t("resultsFor")} “${q}”` : sort === "new" ? t("newGames") : sort === "top" ? t("ratings") : t("allGames")}
+            {query
+              ? `${t("resultsFor")} “${q}”`
+              : sort === "new"
+                ? t("newGames")
+                : sort === "top"
+                  ? t("ratings")
+                  : t("allGames")}
           </h2>
 
           {grid.length === 0 ? (

@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 
 import type { Category, Game } from "./types";
+import { demoCategories, demoGames } from "./catalog";
 
 type GameRow = {
   id: string;
@@ -60,6 +61,8 @@ function toGame(row: GameRow, categoryById: Map<string, Category>): Game {
 }
 
 export async function loadCategories(): Promise<Category[]> {
+  if (!process.env["SUPABASE_URL"] || !process.env["SUPABASE_PUBLISHABLE_KEY"])
+    return demoCategories;
   const supabase = publicClient();
   const { data, error } = await supabase
     .from("categories")
@@ -70,6 +73,9 @@ export async function loadCategories(): Promise<Category[]> {
 }
 
 export async function loadPortal(): Promise<{ categories: Category[]; games: Game[] }> {
+  if (!process.env["SUPABASE_URL"] || !process.env["SUPABASE_PUBLISHABLE_KEY"]) {
+    return { categories: demoCategories, games: demoGames };
+  }
   const supabase = publicClient();
   const [categories, gamesResult] = await Promise.all([
     loadCategories(),
@@ -88,6 +94,18 @@ export async function loadPortal(): Promise<{ categories: Category[]; games: Gam
 export async function loadGame(
   slug: string,
 ): Promise<{ game: Game | null; categories: Category[]; related: Game[] }> {
+  if (!process.env["SUPABASE_URL"] || !process.env["SUPABASE_PUBLISHABLE_KEY"]) {
+    const game = demoGames.find((item) => item.slug === slug) ?? null;
+    return {
+      game,
+      categories: demoCategories,
+      related: game
+        ? demoGames
+            .filter((item) => item.id !== game.id && item.category_id === game.category_id)
+            .slice(0, 12)
+        : [],
+    };
+  }
   const supabase = publicClient();
   const categories = await loadCategories();
   const byId = new Map(categories.map((c) => [c.id, c]));

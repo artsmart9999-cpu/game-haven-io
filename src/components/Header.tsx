@@ -1,8 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { LogIn, LogOut, Menu, Search, Shield } from "lucide-react";
 import { useEffect, useState } from "react";
-
-import { supabase } from "@/integrations/supabase/client";
+import { logout } from "@netlify/identity";
 import { useLang } from "@/lib/i18n";
 
 export function Header({
@@ -85,7 +84,7 @@ export function Header({
         {signedIn ? (
           <button
             onClick={async () => {
-              await supabase.auth.signOut();
+              await logout();
               navigate({ to: "/" });
             }}
             className="flex items-center gap-2 rounded-full bg-secondary px-5 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-surface-2"

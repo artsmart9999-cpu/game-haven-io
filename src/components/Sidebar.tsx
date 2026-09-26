@@ -66,10 +66,12 @@ export function Sidebar({
         <Link
           to="/"
           onClick={onClose}
-          className="flex items-center gap-3 px-6 pb-5 text-2xl font-extrabold tracking-tight text-primary"
+          className="flex items-center gap-3 px-6 pb-7 text-2xl font-extrabold tracking-tight text-foreground"
         >
-          <Gamepad2 className="size-7" />
-          {t("brand")}
+          <span className="grid size-10 rotate-[-5deg] place-items-center rounded-xl bg-primary text-primary-foreground">
+            <Gamepad2 className="size-6" />
+          </span>
+          ARCA<span className="-ml-3 text-primary">DECK</span>
         </Link>
 
         <nav className="flex flex-col">
@@ -81,9 +83,27 @@ export function Sidebar({
             icon={Sparkles}
             onClick={onClose}
           />
-          <Item to="/" search={{ sort: "top" }} label={t("ratings")} icon={TrendingUp} onClick={onClose} />
-          <Item to="/my" search={{ tab: "favorites" }} label={lang === "ru" ? "Избранное" : "Favorites"} icon={Heart} onClick={onClose} />
-          <Item to="/my" search={{ tab: "recent" }} label={lang === "ru" ? "Недавние" : "Recent"} icon={History} onClick={onClose} />
+          <Item
+            to="/"
+            search={{ sort: "top" }}
+            label={t("ratings")}
+            icon={TrendingUp}
+            onClick={onClose}
+          />
+          <Item
+            to="/my"
+            search={{ tab: "favorites" }}
+            label={lang === "ru" ? "Избранное" : "Favorites"}
+            icon={Heart}
+            onClick={onClose}
+          />
+          <Item
+            to="/my"
+            search={{ tab: "recent" }}
+            label={lang === "ru" ? "Недавние" : "Recent"}
+            icon={History}
+            onClick={onClose}
+          />
 
           <div className="my-3 h-px bg-sidebar-border mx-6" />
           <p className="px-6 pb-2 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
