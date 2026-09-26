@@ -151,6 +151,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_game_stat: {
+        Args: { _game_id: string; _kind: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
